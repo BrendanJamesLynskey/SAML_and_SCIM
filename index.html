@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAML 2.0 &amp; SCIM — Enterprise SSO and Provisioning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+<style>
+  :root { --amber:#f5a623; --green:#4ecb8d; --purple:#a78bfa; --blue:#60a5fa; --red:#f87171;
+          --bg:#0a0a0f; --bg2:#10101a; --bg3:#181824; --border:#2a2a3a; --text:#e8e8f0; --muted:#8888a8; }
+  .reveal-viewport { background: var(--bg); }
+  .reveal .slides section { background: transparent; }
+  .reveal { font-family: 'DM Sans', sans-serif; color: var(--text); }
+  .reveal h1, .reveal h2, .reveal h3 { font-family: 'Playfair Display', serif; font-weight: 700; }
+  .reveal h1 { font-size: 1.6em; color: var(--amber); line-height: 1.1; }
+  .reveal h2 { font-size: 1.1em; color: var(--amber); margin-bottom: .2em; }
+  .reveal h3 { font-size: .78em; color: var(--green); margin-bottom: .15em; }
+  .reveal p  { font-size: .56em; line-height: 1.45; color: var(--text); }
+  .reveal li { font-size: .54em; line-height: 1.45; margin-bottom: .1em; }
+  .reveal code { font-family: 'JetBrains Mono', monospace; font-size: .72em; }
+  .reveal pre  { box-shadow: none; background: var(--bg3); border: 1px solid var(--border);
+                 border-radius: 6px; padding: .3em .5em; margin: .25em 0; }
+  .reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #cdd6f4; }
+  .slide-hdr { display:flex; align-items:center; gap:.4em; border-bottom:1px solid var(--border);
+               padding-bottom:.2em; margin-bottom:.3em; }
+  .slide-hdr .tag { font-family:'JetBrains Mono',monospace; font-size:.42em; font-weight:500;
+                    color:var(--bg); background:var(--amber); padding:.1em .4em; border-radius:3px; letter-spacing:.04em; }
+  .slide-hdr h2 { margin:0; font-size:.95em; }
+  .cols { display:grid; gap:.5em; }
+  .cols-2 { grid-template-columns:1fr 1fr; }
+  .cols-3 { grid-template-columns:1fr 1fr 1fr; }
+  .cols-6040 { grid-template-columns:6fr 4fr; }
+  .cols-4060 { grid-template-columns:4fr 6fr; }
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:.35em .6em; }
+  .card.amber { border-left:3px solid var(--amber); }
+  .card.green { border-left:3px solid var(--green); }
+  .card.purple{ border-left:3px solid var(--purple); }
+  .card.blue  { border-left:3px solid var(--blue); }
+  .card.red   { border-left:3px solid var(--red); }
+  .card h3 { font-size:.64em; margin:0 0 .12em; }
+  .card p  { font-size:.52em; margin:0; color:#b8b8d0; }
+  .card ul { margin:0; padding-left:1em; }
+  .card li { font-size:.52em; color:#b8b8d0; margin-bottom:.02em; }
+  .reveal table { width:100%; border-collapse:collapse; font-size:.5em; }
+  .reveal table th { background:var(--bg3); color:var(--amber); font-weight:600; padding:.2em .4em; border:1px solid var(--border); text-align:left; }
+  .reveal table td { padding:.18em .4em; border:1px solid var(--border); color:#ccc; }
+  .reveal table tr:nth-child(even) td { background:#0e0e18; }
+  .a{color:var(--amber);font-weight:600;} .g{color:var(--green);font-weight:600;}
+  .p{color:var(--purple);font-weight:600;} .b{color:var(--blue);font-weight:600;}
+  .r{color:var(--red);font-weight:600;} .mono{font-family:'JetBrains Mono',monospace;}
+  svg.diagram { display:block; margin:0 auto; overflow:visible; }
+  .pill { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:.44em; padding:.08em .4em; border-radius:99px; border:1px solid; margin:0 .08em; }
+  .pill.amber{color:var(--amber); border-color:var(--amber);} .pill.green{color:var(--green); border-color:var(--green);}
+  .pill.purple{color:var(--purple); border-color:var(--purple);} .pill.blue{color:var(--blue); border-color:var(--blue);}
+  .reveal .slide-footer{display:none;}
+  .title-slide h1{font-size:1.8em;}
+  .title-slide .subtitle{font-size:.7em; color:var(--green); font-family:'DM Sans',sans-serif; font-weight:300; letter-spacing:.04em; margin:.3em 0 .6em;}
+  .title-slide .meta{font-size:.48em; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .ss-row{display:flex; gap:.25em; align-items:center; margin:.1em 0; font-size:.55em; font-family:'JetBrains Mono',monospace;}
+  .ss-node{padding:.2em .55em; border-radius:5px; font-size:.9em; background:var(--bg3); border:1px solid var(--border); color:var(--text);}
+  .ss-node.active{background:#1a2a1a; border-color:var(--green); color:var(--green);}
+  .ss-node.done{background:#1a1a2a; border-color:var(--purple); color:var(--purple);}
+  .ss-arrow{color:var(--amber);}
+  .reveal ul, .reveal ol { margin:.15em 0 .15em 1em; }
+  .reveal .slides > section { display:flex !important; flex-direction:column !important; overflow-y:auto !important; align-items:stretch !important; justify-content:flex-start !important; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+
+<!-- ═══ SLIDE 01 — TITLE ═══ -->
+<section class="title-slide" data-background-color="#0a0a0f">
+  <div style="text-align:left; max-width:820px; margin:0 auto; padding:1em 0;">
+    <div style="font-family:'JetBrains Mono',monospace; font-size:.5em; color:var(--muted); margin-bottom:.4em; letter-spacing:.1em;">
+      TECHNICAL PRESENTATION
+    </div>
+    <h1>SAML 2.0<br>&amp; SCIM</h1>
+    <div class="subtitle">Enterprise SSO &amp; Provisioning — the parallel stack</div>
+    <div style="width:60px; height:3px; background:var(--amber); margin-bottom:1.4em;"></div>
+    <div style="display:flex; gap:1.2em; flex-wrap:wrap; margin-bottom:1em;">
+      <span class="pill amber">SAML 2.0</span>
+      <span class="pill green">SCIM 2.0</span>
+      <span class="pill purple">SSO</span>
+      <span class="pill blue">JIT / Provisioning</span>
+    </div>
+    <div class="ss-row" style="margin-top:0.6em;">
+      <span class="ss-node active">IdP</span>
+      <span class="ss-arrow">→</span>
+      <span class="ss-node active">browser</span>
+      <span class="ss-arrow">→</span>
+      <span class="ss-node active">SP</span>
+      <span class="ss-arrow">→</span>
+      <span class="ss-node done">SCIM-provisioned account</span>
+    </div>
+    <p style="max-width:660px; color:#a0a0c0; font-size:.56em; line-height:1.5; margin-top:1em;">
+      The other half of B2B identity. Twenty-year-old XML standards still running every enterprise sale you'll ever do — and how SCIM 2.0 ties them to user lifecycle.
+    </p>
+    <div class="meta" style="margin-top:1.4em;">
+      Federate &nbsp;·&nbsp; Assert &nbsp;·&nbsp; Provision &nbsp;·&nbsp; De-provision
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 02 — TOPICS ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">01</span><h2>Topics</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">SAML 2.0</h3>
+        <ul>
+          <li>The 30-year history of enterprise SSO</li>
+          <li>Roles — IdP, SP, principal — and metadata exchange</li>
+          <li>SP-initiated vs IdP-initiated SSO</li>
+          <li>Bindings — Redirect, POST, Artifact</li>
+          <li>Assertions — structure, signing, encryption</li>
+          <li>Logout — single logout (SLO) and why it usually doesn't work</li>
+          <li>NameID formats &amp; persistent identifiers</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:0.5em;">
+        <h3 class="g">SCIM 2.0</h3>
+        <ul>
+          <li>The lifecycle problem SCIM solves</li>
+          <li>Resource model — User, Group, schema extensions</li>
+          <li>Endpoints, filtering, PATCH, bulk</li>
+          <li>JIT vs SCIM provisioning — when each</li>
+          <li>Group sync — the gnarliest detail</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">When &amp; why</h3>
+        <ul>
+          <li>SAML vs OIDC — which when</li>
+          <li>WS-Federation legacy — what's still out there</li>
+          <li>IdP brokers — Auth0, Entra, WorkOS, Okta</li>
+          <li>Multi-tenant SP — per-tenant IdP connections</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:0.5em;">
+        <h3 class="b">Operational</h3>
+        <ul>
+          <li>The "B2B enterprise readiness" checklist</li>
+          <li>Real-world IdP quirks — Okta, Entra, Workspace, OneLogin, ADFS</li>
+          <li>SAML attacks &amp; defences (XSW, sig wrapping)</li>
+          <li>Migration — SAML→OIDC patterns</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 03 — HISTORY ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">02</span><h2>A Brief History — Why SAML Still Runs the Enterprise</h2></div>
+  <p>SAML wasn't a hyperscaler invention. It's older than most of the SaaS companies that depend on it.</p>
+
+  <svg class="diagram" viewBox="0 0 940 200" width="900" height="200">
+    <line x1="40" y1="100" x2="900" y2="100" stroke="#2a2a3a" stroke-width="2"/>
+    <circle cx="80"  cy="100" r="6" fill="#f87171"/>
+    <circle cx="200" cy="100" r="6" fill="#f5a623"/>
+    <circle cx="320" cy="100" r="6" fill="#f5a623"/>
+    <circle cx="440" cy="100" r="6" fill="#4ecb8d"/>
+    <circle cx="560" cy="100" r="6" fill="#a78bfa"/>
+    <circle cx="680" cy="100" r="6" fill="#60a5fa"/>
+    <circle cx="800" cy="100" r="6" fill="#60a5fa"/>
+
+    <text x="80"  y="60" text-anchor="middle" fill="#f87171" font-family="Playfair Display,serif" font-size="13" font-weight="700">2001</text>
+    <text x="200" y="60" text-anchor="middle" fill="#f5a623" font-family="Playfair Display,serif" font-size="13" font-weight="700">2002</text>
+    <text x="320" y="60" text-anchor="middle" fill="#f5a623" font-family="Playfair Display,serif" font-size="13" font-weight="700">2005</text>
+    <text x="440" y="60" text-anchor="middle" fill="#4ecb8d" font-family="Playfair Display,serif" font-size="13" font-weight="700">2011</text>
+    <text x="560" y="60" text-anchor="middle" fill="#a78bfa" font-family="Playfair Display,serif" font-size="13" font-weight="700">2014</text>
+    <text x="680" y="60" text-anchor="middle" fill="#60a5fa" font-family="Playfair Display,serif" font-size="13" font-weight="700">2018</text>
+    <text x="800" y="60" text-anchor="middle" fill="#60a5fa" font-family="Playfair Display,serif" font-size="13" font-weight="700">2026</text>
+
+    <text x="80"  y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">SAML 1.0</text>
+    <text x="80"  y="138" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">XML pioneers</text>
+    <text x="200" y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">SAML 1.1</text>
+    <text x="320" y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">SAML 2.0</text>
+    <text x="320" y="138" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">OASIS</text>
+    <text x="440" y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">SCIM 1.0</text>
+    <text x="560" y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">SCIM 2.0</text>
+    <text x="560" y="138" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">RFC 7643/4/4</text>
+    <text x="680" y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">OIDC</text>
+    <text x="680" y="138" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">overtakes new SaaS</text>
+    <text x="800" y="125" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">SAML still required</text>
+    <text x="800" y="138" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">in 95% of enterprise</text>
+
+    <text x="465" y="180" text-anchor="middle" fill="#888" font-family="DM Sans,sans-serif" font-size="11">SAML 2.0 was finalised in 2005. Twenty years later, every enterprise sales motion still asks "do you support SAML SSO?"</text>
+  </svg>
+
+  <div class="cols cols-2" style="margin-top:0.3em;">
+    <div class="card amber">
+      <h3 class="a">Why it stuck</h3>
+      <ul>
+        <li>Enterprise IT bought into <span class="g">Active Directory</span> + <span class="g">ADFS</span> in the 2000s; ADFS speaks SAML.</li>
+        <li>Most "official" identity-provider products (Okta, OneLogin, Ping) shipped SAML-first because that's what their buyers had.</li>
+        <li>Once a SAML connection works, no-one wants to touch it. The cost of migration is high; the value is invisible.</li>
+        <li>Compliance regimes (SOC 2, HIPAA, FedRAMP) reference SAML in their control templates; auditors expect it.</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Why OIDC didn't kill it</h3>
+      <p>OIDC arrived a decade after SAML. New SaaS adopt OIDC for end-user social-login; established enterprise SaaS keep SAML for B2B SSO. Most B2B products in 2026 ship <em>both</em>. SCIM is more universal — used regardless of which auth protocol the SP picks.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 04 — ROLES ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">03</span><h2>Roles &amp; Vocabulary</h2></div>
+
+  <svg class="diagram" viewBox="0 0 920 220" width="880" height="220">
+    <rect x="20"  y="60" width="180" height="80" rx="8" fill="#1a1a2a" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="110" y="95" text-anchor="middle" fill="#60a5fa" font-family="Playfair Display,serif" font-size="14" font-weight="700">Principal</text>
+    <text x="110" y="115" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="10">(the user, in browser)</text>
+
+    <rect x="280" y="60" width="200" height="80" rx="8" fill="#1a1a2a" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="380" y="95" text-anchor="middle" fill="#a78bfa" font-family="Playfair Display,serif" font-size="14" font-weight="700">Identity Provider</text>
+    <text x="380" y="115" text-anchor="middle" fill="#a78bfa" font-family="Playfair Display,serif" font-size="14" font-weight="700">(IdP)</text>
+    <text x="380" y="132" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">authenticates · issues assertions</text>
+
+    <rect x="560" y="60" width="200" height="80" rx="8" fill="#1a1a2a" stroke="#4ecb8d" stroke-width="1.5"/>
+    <text x="660" y="95" text-anchor="middle" fill="#4ecb8d" font-family="Playfair Display,serif" font-size="14" font-weight="700">Service Provider</text>
+    <text x="660" y="115" text-anchor="middle" fill="#4ecb8d" font-family="Playfair Display,serif" font-size="14" font-weight="700">(SP)</text>
+    <text x="660" y="132" text-anchor="middle" fill="#ccc" font-family="JetBrains Mono,monospace" font-size="9">consumes assertions · grants access</text>
+
+    <line x1="200" y1="100" x2="280" y2="100" stroke="#888"/>
+    <line x1="480" y1="100" x2="560" y2="100" stroke="#888"/>
+
+    <text x="380" y="180" text-anchor="middle" fill="#888" font-family="DM Sans,sans-serif" font-size="11">Mapping to OIDC: IdP ≈ OP, SP ≈ RP, Assertion ≈ ID Token. Same shape, different wire format.</text>
+  </svg>
+
+  <div class="cols cols-3" style="margin-top:0.2em;">
+    <div class="card amber">
+      <h3 class="a">Vocabulary</h3>
+      <ul>
+        <li><span class="g">Assertion</span> — signed XML statement about the user.</li>
+        <li><span class="g">NameID</span> — the SAML "subject" identifier.</li>
+        <li><span class="g">AttributeStatement</span> — the user's attributes (email, name, groups).</li>
+        <li><span class="g">AuthnContext</span> — how they authenticated (password / x509 / mfa).</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Endpoints (on the SP)</h3>
+      <ul>
+        <li><span class="a">ACS URL</span> — Assertion Consumer Service. Where the IdP POSTs the assertion.</li>
+        <li><span class="a">SLO URL</span> — Single Logout Service.</li>
+        <li><span class="a">Metadata URL</span> — XML describing the SP for IdPs to import.</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3 class="p">Endpoints (on the IdP)</h3>
+      <ul>
+        <li><span class="a">SSO URL</span> — where the SP sends users to authenticate.</li>
+        <li><span class="a">SLO URL</span> — where the SP sends logout requests.</li>
+        <li><span class="a">Metadata URL</span> — XML describing the IdP, plus its signing certificate.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 05 — METADATA ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">04</span><h2>Metadata Exchange — How IdPs and SPs Trust Each Other</h2></div>
+  <p>SAML doesn't have OIDC's <code>/.well-known</code> auto-discovery. Trust is bootstrapped by exchanging an XML <span class="a">metadata</span> file, once, between the IdP and SP. Each side imports the other's metadata.</p>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div>
+      <div class="card amber">
+        <h3 class="a">Service Provider metadata (excerpt)</h3>
+<pre><code>&lt;EntityDescriptor entityID="https://app.example/saml"&gt;
+  &lt;SPSSODescriptor protocolSupportEnumeration=
+       "urn:oasis:names:tc:SAML:2.0:protocol"&gt;
+    &lt;KeyDescriptor use="signing"&gt;
+      &lt;ds:KeyInfo&gt;&lt;ds:X509Data&gt;
+        &lt;ds:X509Certificate&gt;MIID…&lt;/ds:X509Certificate&gt;
+      &lt;/ds:X509Data&gt;&lt;/ds:KeyInfo&gt;
+    &lt;/KeyDescriptor&gt;
+    &lt;NameIDFormat&gt;urn:oasis:names:tc:SAML:1.1:nameid-format:
+      emailAddress&lt;/NameIDFormat&gt;
+    &lt;AssertionConsumerService
+        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        Location="https://app.example/saml/acs"
+        index="0"/&gt;
+    &lt;SingleLogoutService
+        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        Location="https://app.example/saml/slo"/&gt;
+  &lt;/SPSSODescriptor&gt;
+&lt;/EntityDescriptor&gt;</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3 class="g">Three import patterns in the real world</h3>
+        <ul>
+          <li><span class="a">URL-based</span> — both sides expose <code>/saml/metadata</code>; admins paste the URL into the other side's UI. SP refreshes the IdP's metadata periodically. Best.</li>
+          <li><span class="a">File-based</span> — admin downloads the IdP's XML, uploads it to the SP. Manual; common for tightly-controlled deployments.</li>
+          <li><span class="a">Per-tenant blob</span> — multi-tenant SPs (Slack, Salesforce) accept either an IdP metadata URL or pasted IDP issuer / SSO URL / certificate. Same data, different UX.</li>
+        </ul>
+      </div>
+      <div class="card purple" style="margin-top:0.4em;">
+        <h3 class="p">Certificate rotation — the silent breaker</h3>
+        <ul>
+          <li>IdP certificates have expiry dates (often 1–3 years).</li>
+          <li>If the SP imported the metadata <em>once</em> at setup, the day the cert expires the SP starts rejecting every login.</li>
+          <li>Use URL-based metadata so the SP refreshes nightly. Or set a calendar reminder for every connection.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 06 — SP INITIATED FLOW ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">05</span><h2>SP-Initiated SSO — The Common Flow</h2></div>
+  <p>User goes to your app, isn't signed in, gets bounced to the IdP, comes back signed in. The 95% case.</p>
+
+  <svg class="diagram" viewBox="0 0 940 270" width="900" height="270">
+    <rect x="20"  y="20" width="160" height="36" rx="5" fill="#1a1a2a" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="100" y="44" text-anchor="middle" fill="#60a5fa" font-family="Playfair Display,serif" font-size="13" font-weight="700">Browser</text>
+    <rect x="380" y="20" width="160" height="36" rx="5" fill="#1a1a2a" stroke="#4ecb8d" stroke-width="1.5"/>
+    <text x="460" y="44" text-anchor="middle" fill="#4ecb8d" font-family="Playfair Display,serif" font-size="13" font-weight="700">SP (your app)</text>
+    <rect x="740" y="20" width="160" height="36" rx="5" fill="#1a1a2a" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="820" y="44" text-anchor="middle" fill="#a78bfa" font-family="Playfair Display,serif" font-size="13" font-weight="700">IdP (Okta / Entra…)</text>
+
+    <line x1="100" y1="56" x2="100" y2="260" stroke="#2a2a3a" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="460" y1="56" x2="460" y2="260" stroke="#2a2a3a" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="820" y1="56" x2="820" y2="260" stroke="#2a2a3a" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <line x1="100" y1="78" x2="380" y2="78" stroke="#60a5fa" stroke-width="1.2" marker-end="url(#m06b)"/>
+    <text x="240" y="74" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono,monospace" font-size="10">1. GET /dashboard (no session)</text>
+    <line x1="380" y1="100" x2="100" y2="100" stroke="#4ecb8d" stroke-width="1.2" marker-end="url(#m06g)"/>
+    <text x="240" y="96" text-anchor="middle" fill="#4ecb8d" font-family="JetBrains Mono,monospace" font-size="10">2. 302 → IdP SSO URL with SAMLRequest</text>
+    <line x1="100" y1="125" x2="740" y2="125" stroke="#60a5fa" stroke-width="1.2" marker-end="url(#m06b)"/>
+    <text x="420" y="121" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono,monospace" font-size="10">3. GET IdP/sso?SAMLRequest=…&amp;RelayState=…</text>
+    <line x1="740" y1="150" x2="100" y2="150" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#m06p)"/>
+    <text x="420" y="146" text-anchor="middle" fill="#a78bfa" font-family="JetBrains Mono,monospace" font-size="10">4. login + MFA at the IdP</text>
+    <line x1="740" y1="175" x2="100" y2="175" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#m06p)"/>
+    <text x="420" y="171" text-anchor="middle" fill="#a78bfa" font-family="JetBrains Mono,monospace" font-size="10">5. HTML form auto-POSTs SAMLResponse to SP/acs</text>
+    <line x1="100" y1="200" x2="380" y2="200" stroke="#60a5fa" stroke-width="1.2" marker-end="url(#m06b)"/>
+    <text x="240" y="196" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono,monospace" font-size="10">6. POST /saml/acs (SAMLResponse)</text>
+    <line x1="380" y1="225" x2="100" y2="225" stroke="#4ecb8d" stroke-width="1.2" marker-end="url(#m06g)"/>
+    <text x="240" y="221" text-anchor="middle" fill="#4ecb8d" font-family="JetBrains Mono,monospace" font-size="10">7. validate, set session cookie, 302 → /dashboard</text>
+    <text x="465" y="255" text-anchor="middle" fill="#888" font-family="DM Sans,sans-serif" font-size="11">RelayState carries the original requested URL through the round-trip — that's how the user lands back where they were going.</text>
+
+    <defs>
+      <marker id="m06b" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#60a5fa"/></marker>
+      <marker id="m06g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#4ecb8d"/></marker>
+      <marker id="m06p" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#a78bfa"/></marker>
+    </defs>
+  </svg>
+
+  <div class="cols cols-2" style="margin-top:0.2em;">
+    <div class="card amber">
+      <h3 class="a">IdP-initiated SSO</h3>
+      <p>User starts at the IdP (their company "app dock"), clicks the SP's tile, IdP POSTs a SAMLResponse to the SP's ACS without any prior request. Operationally common but has security caveats — see "XSW &amp; SAML attacks".</p>
+    </div>
+    <div class="card green">
+      <h3 class="g">Bindings</h3>
+      <ul>
+        <li><span class="a">HTTP-Redirect</span> — request goes in the URL (deflated + base64). Used for short SAMLRequests.</li>
+        <li><span class="a">HTTP-POST</span> — request/response in a form body. Used for SAMLResponses (too big for URLs).</li>
+        <li><span class="a">Artifact</span> — a small reference travels via the browser; SP fetches the real assertion server-to-server. Rare; nice security property.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 07 — ASSERTIONS ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">06</span><h2>Assertions — The Payload</h2></div>
+  <p>The whole point. A SAML assertion is a signed XML document the IdP issues about the user, sent to the SP via the browser.</p>
+
+<pre><code>&lt;Assertion ID="_a72f…" IssueInstant="2026-05-06T08:42:13Z" Version="2.0"&gt;
+  &lt;Issuer&gt;https://idp.acme.com/&lt;/Issuer&gt;
+
+  &lt;ds:Signature&gt;…RSA-SHA256 over the assertion or response…&lt;/ds:Signature&gt;
+
+  &lt;Subject&gt;
+    &lt;NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"&gt;
+      alice@acme.com
+    &lt;/NameID&gt;
+    &lt;SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"&gt;
+      &lt;SubjectConfirmationData
+          NotOnOrAfter="2026-05-06T08:47:13Z"
+          Recipient="https://app.example/saml/acs"
+          InResponseTo="_req_0xa1b2"/&gt;
+    &lt;/SubjectConfirmation&gt;
+  &lt;/Subject&gt;
+
+  &lt;Conditions NotBefore="2026-05-06T08:42:13Z" NotOnOrAfter="2026-05-06T08:47:13Z"&gt;
+    &lt;AudienceRestriction&gt;&lt;Audience&gt;https://app.example/saml&lt;/Audience&gt;&lt;/AudienceRestriction&gt;
+  &lt;/Conditions&gt;
+
+  &lt;AuthnStatement AuthnInstant="2026-05-06T08:42:00Z"&gt;
+    &lt;AuthnContext&gt;
+      &lt;AuthnContextClassRef&gt;
+        urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
+      &lt;/AuthnContextClassRef&gt;
+    &lt;/AuthnContext&gt;
+  &lt;/AuthnStatement&gt;
+
+  &lt;AttributeStatement&gt;
+    &lt;Attribute Name="email"&gt;&lt;AttributeValue&gt;alice@acme.com&lt;/AttributeValue&gt;&lt;/Attribute&gt;
+    &lt;Attribute Name="firstName"&gt;&lt;AttributeValue&gt;Alice&lt;/AttributeValue&gt;&lt;/Attribute&gt;
+    &lt;Attribute Name="groups"&gt;
+      &lt;AttributeValue&gt;Engineering&lt;/AttributeValue&gt;
+      &lt;AttributeValue&gt;Admins&lt;/AttributeValue&gt;
+    &lt;/Attribute&gt;
+  &lt;/AttributeStatement&gt;
+&lt;/Assertion&gt;</code></pre>
+
+  <div class="cols cols-3" style="margin-top:0.2em;">
+    <div class="card amber"><h3 class="a">Validation checklist</h3>
+      <ul>
+        <li>Signature verifies against the IdP's public key from metadata.</li>
+        <li><code>Issuer</code> matches the configured IdP entityID.</li>
+        <li><code>Audience</code> = your SP's entityID.</li>
+        <li>Not before / not on or after window.</li>
+        <li><code>InResponseTo</code> matches the request you actually sent.</li>
+      </ul>
+    </div>
+    <div class="card green"><h3 class="g">Encrypt or sign?</h3>
+      <p>The assertion is <em>always</em> signed. Encryption of the assertion is optional and adds confidentiality if the assertion contains PII you'd rather not leave in browser history / proxy logs.</p>
+    </div>
+    <div class="card purple"><h3 class="p">Map to OIDC</h3>
+      <ul>
+        <li><code>NameID</code> ≈ OIDC <code>sub</code>.</li>
+        <li><code>AuthnContextClassRef</code> ≈ OIDC <code>acr</code>.</li>
+        <li><code>AuthnInstant</code> ≈ OIDC <code>auth_time</code>.</li>
+        <li><code>AttributeStatement</code> ≈ ID-token claims.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 08 — NAMEID FORMATS ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">07</span><h2>NameID Formats — The Identifier Question</h2></div>
+  <p>The choice of NameID format is the closest SAML analogue of the OIDC pairwise/public-subject debate. It governs how the SP identifies the user across logins.</p>
+
+  <table>
+    <thead><tr><th>Format URN</th><th>Meaning</th><th>Best for</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>…format:emailAddress</code></td>
+        <td>The user's email address as the identifier.</td>
+        <td>Easy to integrate; breaks the day a user changes email or marriage / surname change.</td>
+      </tr>
+      <tr>
+        <td><code>…format:persistent</code></td>
+        <td>A stable, opaque, per-SP identifier; survives email/name change. The recommended default.</td>
+        <td>Production B2B SSO. <span class="g">Use this if you can.</span></td>
+      </tr>
+      <tr>
+        <td><code>…format:transient</code></td>
+        <td>A new identifier on every assertion. Useful for anonymous services.</td>
+        <td>Privacy-first portals; rarely seen in B2B.</td>
+      </tr>
+      <tr>
+        <td><code>…format:unspecified</code></td>
+        <td>Whatever the IdP feels like. Often a username or AD <code>sAMAccountName</code>.</td>
+        <td>Legacy; brittle. Avoid.</td>
+      </tr>
+      <tr>
+        <td><code>…format:X509SubjectName</code></td>
+        <td>An X.509 DN, for smart-card / PIV deployments.</td>
+        <td>Government, defence.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div class="card amber">
+      <h3 class="a">"My users keep getting duplicate accounts"</h3>
+      <p>Almost always: the SP keyed accounts by <code>NameID = emailAddress</code>, the user's email changed in the IdP, and the SP created a new local account on next login. Fix: key on <code>persistent</code>; treat email as a mutable attribute.</p>
+    </div>
+    <div class="card red">
+      <h3 class="r">"Persistent" is per-SP, not per-user</h3>
+      <p>The same user looks like different <code>persistent</code> NameIDs to different SPs (by design — privacy). If you operate two related SPs and want the same identifier in both, you need an explicit cross-SP claim or a separate "userPrincipalName" attribute.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 09 — ATTACKS ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">08</span><h2>SAML Attacks &amp; Defences</h2></div>
+  <p>XML signatures are notoriously fragile. SAML libraries have been a recurring source of CVEs.</p>
+
+  <table>
+    <thead><tr><th>Attack</th><th>How</th><th>Defence</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="r">XML Signature Wrapping (XSW)</span></td>
+        <td>Attacker injects an extra unsigned <code>&lt;Assertion&gt;</code> alongside the signed one. Library validates the signed one but the SP code reads the unsigned one.</td>
+        <td>Use a library that resolves references via <code>Reference URI</code> + <code>ID</code>, not by document position. Reject documents with multiple <code>&lt;Assertion&gt;</code> elements.</td>
+      </tr>
+      <tr>
+        <td><span class="r">XML eXternal Entity (XXE)</span></td>
+        <td>SAML XML parser fetches a remote DTD; attacker exfiltrates files.</td>
+        <td>Disable DOCTYPE / external entity resolution in the XML parser.</td>
+      </tr>
+      <tr>
+        <td><span class="r">Comment injection in NameID</span></td>
+        <td>Some libraries normalise <code>alice&lt;!--ignore--&gt;@evil.com</code> differently between sig-validation and the application; user is bound to the wrong account.</td>
+        <td>Reject NameIDs containing comments / unexpected characters; canonicalise before comparison.</td>
+      </tr>
+      <tr>
+        <td><span class="r">Replay</span></td>
+        <td>Re-using a captured assertion within its validity window.</td>
+        <td>Cache the <code>AssertionID</code> for the validity window; reject duplicates. Pin <code>InResponseTo</code> and <code>NotOnOrAfter</code>.</td>
+      </tr>
+      <tr>
+        <td><span class="r">IdP-initiated CSRF</span></td>
+        <td>Attacker provides a SAMLResponse to the user's browser; SP processes it and creates a session as the attacker's account.</td>
+        <td>Default-disable IdP-initiated SSO. If you must enable it, pin <code>RelayState</code> to a session-bound token.</td>
+      </tr>
+      <tr>
+        <td><span class="r">Algorithm downgrade</span></td>
+        <td>IdP signs with SHA-1 / RSA-1024 / unsigned response wrapper.</td>
+        <td>Pin <code>SignatureMethod</code> = RSA-SHA256 or stronger; reject SHA-1; require the entire <code>&lt;Response&gt;</code> or assertion to be signed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card amber" style="margin-top:0.4em;">
+    <h3 class="a">Don't write a SAML library</h3>
+    <p>Use a maintained one. <code>passport-saml</code>, <code>python3-saml</code>, <code>pysaml2</code>, <code>spring-security-saml2</code>, <code>onelogin/php-saml</code>, <code>itfoxtec.identity.saml2</code>. They all have known issues; track their CVE feeds.</p>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 10 — SLO ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">09</span><h2>Single Logout (SLO) — Why It Usually Doesn't Work</h2></div>
+
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">The promise</h3>
+        <p>User clicks "Log out" anywhere → IdP propagates a logout request to every SP the user is currently signed into → all sessions die at once.</p>
+      </div>
+      <div class="card red" style="margin-top:0.4em;">
+        <h3 class="r">The reality</h3>
+        <ul>
+          <li><span class="r">Front-channel SLO</span> — IdP redirects the browser through every SP in turn. One slow / dead SP stalls the chain.</li>
+          <li><span class="r">Back-channel SLO</span> — IdP makes server-to-server calls to every SP's logout endpoint. Many SPs never implemented it.</li>
+          <li>Most production deployments either disable SLO or accept that "log out" only logs out of one app + the IdP.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3 class="g">What actually works</h3>
+        <ul>
+          <li><span class="a">IdP session timeout</span> — short sessions at the IdP side mean the user has to re-authenticate frequently; SPs become read-from-IdP within a bounded window.</li>
+          <li><span class="a">Force re-auth</span> on the IdP for sensitive actions (<code>ForceAuthn=true</code>) — equivalent to OIDC <code>prompt=login</code>.</li>
+          <li><span class="a">CAEP / Shared Signals Framework</span> — push events from IdP to SPs ("session revoked"); the modern replacement.</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:0.4em;">
+        <h3 class="b">Practical advice</h3>
+        <p>Don't promise users that "Log out" kills every app they're in. Tell them what it actually does. If you operate the IdP, invest in CAEP-style propagation; SLO is a footgun.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 11 — SAML VS OIDC ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">10</span><h2>SAML vs OIDC — Which When</h2></div>
+
+  <table>
+    <thead><tr><th>Concern</th><th>SAML 2.0</th><th>OIDC</th></tr></thead>
+    <tbody>
+      <tr><td>Wire format</td><td>XML, base64-encoded, browser POST</td><td>JSON, URL parameters, Bearer JWTs</td></tr>
+      <tr><td>Crypto</td><td>XML-DSig (notoriously brittle)</td><td>JWS / JWE (compact, well-supported)</td></tr>
+      <tr><td>Discovery</td><td>Manual XML metadata exchange</td><td><code>/.well-known/openid-configuration</code></td></tr>
+      <tr><td>Native / mobile apps</td><td>Painful — XML in a webview</td><td>Designed for it (PKCE + system browser)</td></tr>
+      <tr><td>API delegation</td><td>None — auth only, OAuth needed alongside</td><td>Built on OAuth — same token both jobs</td></tr>
+      <tr><td>Logout</td><td>SLO often broken; CAEP retrofit</td><td>Back-Channel Logout works at scale</td></tr>
+      <tr><td>Provisioning</td><td>JIT from assertion attributes; SCIM bolted on</td><td>JIT from ID-token claims; SCIM bolted on</td></tr>
+      <tr><td>Library quality</td><td>Variable; many CVEs over the years</td><td>Mature, narrowly-scoped libraries</td></tr>
+      <tr><td>Enterprise IdP support</td><td>Universal — every IdP has spoken SAML for 20 years</td><td>Universal — same IdPs all added OIDC by 2018</td></tr>
+      <tr><td>Buyer expectation in 2026</td><td>Required by every enterprise procurement checklist</td><td>Increasingly accepted as equivalent</td></tr>
+    </tbody>
+  </table>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div class="card amber">
+      <h3 class="a">When to support SAML</h3>
+      <ul>
+        <li>You sell B2B and any prospect's procurement form mentions "SSO".</li>
+        <li>You integrate into Workday / Salesforce / SAP / ServiceNow ecosystems.</li>
+        <li>Your IdP is ADFS or a 2010-era enterprise SSO product.</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">When OIDC is enough</h3>
+      <ul>
+        <li>Pure-consumer app — "Sign in with Google".</li>
+        <li>Greenfield SaaS where you own the customer base, not enterprise procurement.</li>
+        <li>Mobile or native client apps.</li>
+        <li>API-first products where you'd need OAuth anyway.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 12 — WS-FED LEGACY ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">11</span><h2>WS-Federation Legacy — What Else Is Still Out There</h2></div>
+
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">WS-Federation</h3>
+        <ul>
+          <li>Microsoft's own pre-OIDC federation — a sibling of SAML.</li>
+          <li>Default for ADFS &lt; 2016 and SharePoint on-prem.</li>
+          <li>Wraps a SAML assertion in a different XML envelope (<code>RequestSecurityTokenResponse</code>).</li>
+          <li>Most modern ADFS / Entra deployments now offer SAML and OIDC alongside; WS-Fed is fading.</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:0.4em;">
+        <h3 class="g">Kerberos / IWA</h3>
+        <ul>
+          <li>"Integrated Windows Authentication" — domain-joined machines authenticate transparently using Kerberos tickets.</li>
+          <li>Still everywhere on intranets.</li>
+          <li>Often the <em>back-end</em> of an ADFS / Entra IdP — the user's Windows session feeds the IdP, which then issues a SAML / OIDC assertion outward.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">JWT / proprietary header SSO</h3>
+        <ul>
+          <li>Many older enterprise apps use a proprietary HTTP header (<code>X-Remote-User</code>, <code>X-Forwarded-Email</code>) populated by an upstream auth proxy.</li>
+          <li>The proxy itself usually speaks SAML or OIDC outbound.</li>
+          <li>Be careful: an app that trusts <code>X-Remote-User</code> directly is trivial to spoof if the proxy isn't enforced.</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:0.4em;">
+        <h3 class="b">LDAP / AD bind</h3>
+        <ul>
+          <li>The original B2B "SSO" — SP authenticates the user by binding to the customer's LDAP / Active Directory with the user's credentials.</li>
+          <li>Means the SP <em>handles passwords directly</em>, just like the password anti-pattern.</li>
+          <li>Replaced by SAML once IdPs were mature; some ancient products still ask for LDAP credentials.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 13 — WHY SCIM ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">12</span><h2>SCIM — The Lifecycle Problem</h2></div>
+  <p>SAML signs a user in. It says nothing about <em>creating</em> their account, <em>updating</em> their group memberships, or <em>de-provisioning</em> them on their last day. <span class="a">SCIM 2.0</span> is the protocol that does that.</p>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div>
+      <div class="card amber">
+        <h3 class="a">The problem in concrete terms</h3>
+        <ul>
+          <li>HR fires Bob at 17:00 on Friday. IT removes him from Active Directory.</li>
+          <li>Bob still has accounts in 47 SaaS products.</li>
+          <li>If those accounts are SAML-only, Bob simply can't log in any more — but his data is still there, his licences are still being paid, and a forgotten API key in his profile still works.</li>
+          <li>If those accounts are SCIM-provisioned, the IdP issues a <code>PATCH /Users/{id} {"active": false}</code> at 17:00:05 Friday. Account suspended; data accessible to admins; licence freed.</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:0.4em;">
+        <h3 class="g">SCIM = "System for Cross-domain Identity Management"</h3>
+        <ul>
+          <li>RFC 7643 (core schema), RFC 7644 (protocol), RFC 7642 (use cases). Final 2015.</li>
+          <li>Built on JSON over HTTPS — looks more like a REST API than SAML.</li>
+          <li>The IdP (or HR system) is the <em>client</em>; the SP is the <em>server</em> that exposes <code>/Users</code> and <code>/Groups</code> endpoints.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">A typical SCIM resource</h3>
+<pre><code>GET /scim/v2/Users/72f81b9e
+Authorization: Bearer eyJ…
+Accept: application/scim+json
+
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "id": "72f81b9e",
+  "userName": "alice@acme.com",
+  "name": { "givenName": "Alice", "familyName": "Example" },
+  "emails": [{ "value": "alice@acme.com", "primary": true }],
+  "active": true,
+  "groups": [
+    { "value": "g1", "display": "Engineering" },
+    { "value": "g2", "display": "Admins" }
+  ],
+  "meta": {
+    "resourceType": "User",
+    "created": "2024-09-12T10:00:00Z",
+    "lastModified": "2026-05-03T14:22:11Z"
+  }
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 14 — SCIM PROTOCOL ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">13</span><h2>SCIM 2.0 Protocol — Endpoints &amp; Operations</h2></div>
+
+  <table>
+    <thead><tr><th>Verb &amp; Path</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /Users?filter=…</code></td><td>List users (with filtering, paging).</td></tr>
+      <tr><td><code>GET /Users/{id}</code></td><td>Read a single user.</td></tr>
+      <tr><td><code>POST /Users</code></td><td>Create a new user.</td></tr>
+      <tr><td><code>PUT /Users/{id}</code></td><td>Replace a user (full payload).</td></tr>
+      <tr><td><code>PATCH /Users/{id}</code></td><td>Partial update — the everyday verb.</td></tr>
+      <tr><td><code>DELETE /Users/{id}</code></td><td>Hard delete (rare; most IdPs use <code>active: false</code>).</td></tr>
+      <tr><td><code>POST /Bulk</code></td><td>Atomic batch of operations.</td></tr>
+      <tr><td><code>GET /Schemas</code> &middot; <code>/ResourceTypes</code> &middot; <code>/ServiceProviderConfig</code></td><td>Self-describing metadata.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div>
+      <div class="card amber">
+        <h3 class="a">Filtering &amp; PATCH</h3>
+<pre><code>GET /Users?filter=userName eq "alice@acme.com"
+
+PATCH /Users/72f81b9e
+{
+  "schemas":["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+  "Operations": [
+    { "op":"replace", "path":"active", "value":false },
+    { "op":"add",     "path":"groups", "value":[{"value":"g3"}] },
+    { "op":"remove",  "path":"groups[value eq \"g2\"]" }
+  ]
+}</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3 class="g">Schema extensions</h3>
+<pre><code>"schemas": [
+  "urn:ietf:params:scim:schemas:core:2.0:User",
+  "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+],
+"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+  "employeeNumber": "12345",
+  "department":     "Engineering",
+  "manager":        { "value": "1f2c…", "displayName": "Bob Boss" }
+}</code></pre>
+        <p>Most SaaS products define their own extension URN for app-specific attributes (Slack bot scopes, Salesforce profile, etc.).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 15 — JIT VS SCIM ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">14</span><h2>JIT vs SCIM Provisioning — When Each</h2></div>
+
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">Just-in-Time (JIT) provisioning</h3>
+        <ul>
+          <li>SP creates the user account on first SAML / OIDC sign-in, populating attributes from the assertion / ID token.</li>
+          <li>No separate provisioning channel; setup is "configure SSO and you're done".</li>
+          <li>Cannot create users <em>before</em> they sign in (no welcome email from your app, no pre-populated permissions).</li>
+          <li>Cannot reliably <em>de-provision</em> — if a user no longer signs in, the account just sits dormant.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3 class="g">SCIM provisioning</h3>
+        <ul>
+          <li>IdP pushes user lifecycle events to the SP independently of sign-ins.</li>
+          <li>Pre-create accounts (welcome email arrives Monday morning before the new starter has tried to log in).</li>
+          <li>Group changes propagate within seconds.</li>
+          <li>De-provisioning is reliable.</li>
+          <li>Required by enterprise procurement on every deal &gt; 500 seats.</li>
+        </ul>
+      </div>
+      <div class="card purple" style="margin-top:0.4em;">
+        <h3 class="p">In practice — both</h3>
+        <p>Modern B2B SaaS supports both: SCIM for proper lifecycle, JIT as a fallback for users who slip through (e.g. a contractor who isn't in the SCIM payload but does have an SSO account). The two should agree on the same identifier so the JIT user matches the SCIM-managed one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 16 — GROUP SYNC ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">15</span><h2>Group Sync — The Gnarliest Detail</h2></div>
+  <p>Provisioning a user is easy. Keeping their group memberships in sync across systems is where SCIM rollouts go sideways.</p>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div>
+      <div class="card red">
+        <h3 class="r">The four traps</h3>
+        <ul>
+          <li><span class="a">N×M mapping</span> — IdP has 5,000 AD groups; the SP has 12 roles. Mapping must be defined per-customer.</li>
+          <li><span class="a">Nested groups</span> — IdP supports them; SCIM 2.0 doesn't natively. Most IdPs flatten before push.</li>
+          <li><span class="a">Group name drift</span> — IdP renames a group; SCIM <code>displayName</code> updates but the SP's app code might key on the name not the <code>id</code>.</li>
+          <li><span class="a">Filtered sync</span> — IdP only pushes groups whose name matches a prefix. Drop the filter, suddenly every AD group lands at the SP.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3 class="g">Patterns that work</h3>
+        <ul>
+          <li><span class="a">Customer-controlled mapping table</span> — UI in the SP lets the customer's admin map "AD group X → SP role Y".</li>
+          <li><span class="a">Key on group <code>id</code>, not <code>displayName</code></span>. Names can change; ids should not.</li>
+          <li><span class="a">Per-tenant SCIM endpoint</span> — <code>/scim/v2/{tenant_id}/Users</code> — so each customer's IdP only touches its own users.</li>
+          <li><span class="a">Idempotent PATCH</span> — re-applying the same operation must be safe, because IdPs replay on retry.</li>
+        </ul>
+      </div>
+      <div class="card amber" style="margin-top:0.4em;">
+        <h3 class="a">What good observability looks like</h3>
+        <p>Log every SCIM operation with: tenant, IdP request id, SP user id, operation type, before/after diff, outcome. When a customer reports "Bob still has access", you can trace it back to a missing PATCH or a successful one that didn't take.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 17 — IDP QUIRKS ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">16</span><h2>Real-World IdP Quirks</h2></div>
+  <p>Every major IdP has its own SAML &amp; SCIM idiosyncrasies. The first time you ship to enterprise, you'll meet all of them.</p>
+
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">Microsoft Entra ID (formerly Azure AD)</h3>
+        <ul>
+          <li>SAML <em>and</em> OIDC, on a per-app basis; SCIM via "Enterprise Apps".</li>
+          <li>SCIM payloads sometimes omit <code>userName</code> on update, breaking SPs that key on it.</li>
+          <li>Group sync is filtered; admin must explicitly assign each group to the app.</li>
+          <li>The wide quirks list is worth a separate doc — Microsoft's SCIM is the most-deviated.</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:0.4em;">
+        <h3 class="g">Okta</h3>
+        <ul>
+          <li>The reference SAML/SCIM IdP — most SaaS test against Okta first.</li>
+          <li>"Lifecycle Management" SKU is required for outbound SCIM.</li>
+          <li>Profile mappings via Okta Expression Language can produce surprising assertion attribute values.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">Google Workspace</h3>
+        <ul>
+          <li>SAML supports only IdP-initiated for many of its built-in apps.</li>
+          <li>SCIM for outbound provisioning is supported but less mature than Okta / Entra.</li>
+          <li>Generally flexible on attribute mapping.</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:0.4em;">
+        <h3 class="b">OneLogin / Ping / JumpCloud / ADFS</h3>
+        <ul>
+          <li><span class="a">OneLogin</span> — long-standing, solid SAML; SCIM coverage varies.</li>
+          <li><span class="a">Ping (PingFederate / PingOne)</span> — strong in regulated industries; very strict on signatures.</li>
+          <li><span class="a">JumpCloud</span> — popular with smaller orgs; handles AD-equivalence on Mac/Linux.</li>
+          <li><span class="a">ADFS</span> — still everywhere, on-prem; expects WS-Fed often, SAML on demand.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 18 — IDP BROKERS ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">17</span><h2>IdP Brokers — Don't Implement N IdPs Yourself</h2></div>
+  <p>If your B2B SaaS will ever connect to more than two customer IdPs, don't build the SAML / SCIM stack <em>n</em> times. Use a broker.</p>
+
+  <div class="cols cols-2" style="margin-top:0.4em;">
+    <div>
+      <div class="card amber">
+        <h3 class="a">What a broker does</h3>
+        <ul>
+          <li>Speaks SAML / OIDC / SCIM to the customer's IdP.</li>
+          <li>Speaks one normalised protocol (usually OIDC) to your app.</li>
+          <li>Each customer is a "connection" with its own metadata.</li>
+          <li>Handles per-IdP quirks centrally.</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:0.4em;">
+        <h3 class="g">Brokers worth knowing</h3>
+        <ul>
+          <li><span class="a">WorkOS</span> — "SSO + SCIM + Audit Logs as a service". The reference for B2B.</li>
+          <li><span class="a">Auth0 (Okta CIC)</span> — Enterprise Connections — full broker plus customer login UX.</li>
+          <li><span class="a">Frontegg / Stytch B2B / Descope</span> — newer entrants in the same space.</li>
+          <li><span class="a">Keycloak</span> — open-source IdP that itself works as a broker for upstream IdPs.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">When to in-source</h3>
+        <ul>
+          <li>You have a real cost reason — &gt; ~10k SSO connections, broker pricing tips over.</li>
+          <li>You handle classified or regulated data the broker can't touch.</li>
+          <li>You need to ship the SP on-prem (broker is hosted SaaS).</li>
+        </ul>
+      </div>
+      <div class="card red" style="margin-top:0.4em;">
+        <h3 class="r">If you do in-source</h3>
+        <p>Adopt a per-tenant abstraction from day one — every customer is an isolated SAML connection with its own metadata, signing certificates, expiry, attribute mapping, SCIM endpoint, audit log destination. This is what the brokers spent years building.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 19 — B2B CHECKLIST ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">18</span><h2>The "B2B Enterprise Readiness" Checklist</h2></div>
+  <p>What an enterprise procurement team will ask. If your product can tick most of these, expect to skip past the deeply technical question round.</p>
+
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">SSO</h3>
+        <ul>
+          <li>SAML 2.0 SP-initiated &amp; IdP-initiated.</li>
+          <li>OIDC for newer customers.</li>
+          <li>Per-customer metadata exchange via URL <em>or</em> file <em>or</em> manual.</li>
+          <li>Per-customer X.509 cert with rotation reminders.</li>
+          <li>NameID format: <code>persistent</code> default, others on request.</li>
+          <li>Forced-auth / step-up via <code>ForceAuthn</code> / <code>acr_values</code>.</li>
+          <li>Custom claim → role mappings configurable by the customer admin.</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:0.4em;">
+        <h3 class="g">Provisioning</h3>
+        <ul>
+          <li>SCIM 2.0 server with at least <code>/Users</code> and <code>/Groups</code> + <code>/ServiceProviderConfig</code>.</li>
+          <li>Bearer-token or OAuth-protected SCIM endpoint.</li>
+          <li>Filtering, paging, PATCH (incl. nested PATCH).</li>
+          <li>Soft-delete via <code>active: false</code>.</li>
+          <li>JIT fallback for non-SCIM tenants.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">Audit &amp; Compliance</h3>
+        <ul>
+          <li>Per-tenant audit log streamed to customer (Splunk, Datadog, S3).</li>
+          <li>SOC 2 Type II report on file.</li>
+          <li>ISO 27001, where applicable.</li>
+          <li>Data-residency options (EU / US / regional).</li>
+          <li>DPA / sub-processor list / GDPR responses.</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:0.4em;">
+        <h3 class="b">Operational</h3>
+        <ul>
+          <li>Per-customer admin UI for everything above.</li>
+          <li>SLAs on SCIM propagation latency (&lt; 5 min for de-provisioning).</li>
+          <li>Test IdP — your customers' IT teams want to validate without touching their prod tenant.</li>
+          <li>Friendly support response when "<em>SAML stopped working last night</em>" turns out to be cert rotation.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ SLIDE 20 — SUMMARY ═══ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr"><span class="tag">19</span><h2>Summary &amp; References</h2></div>
+
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">What we covered</h3>
+        <ul>
+          <li>Why SAML still runs the enterprise — 30 years of momentum</li>
+          <li>Roles (IdP, SP, principal), endpoints, metadata exchange</li>
+          <li>SP- and IdP-initiated SSO, bindings, RelayState</li>
+          <li>The assertion structure, signature, validation checklist, NameID formats</li>
+          <li>SAML attacks (XSW, XXE, replay, comment injection) and defences</li>
+          <li>Single Logout — and why CAEP is the modern replacement</li>
+          <li>SAML vs OIDC — when each</li>
+          <li>WS-Federation, Kerberos, LDAP-bind, header-based SSO</li>
+          <li>SCIM 2.0 — the lifecycle problem, resource model, endpoints</li>
+          <li>JIT vs SCIM provisioning, group sync gotchas</li>
+          <li>Per-IdP quirks (Entra, Okta, Workspace, OneLogin, Ping)</li>
+          <li>IdP brokers — when to use, when to in-source</li>
+          <li>The B2B enterprise-readiness checklist</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3 class="g">Three take-aways</h3>
+        <ol style="padding-left:1.2em;">
+          <li><span class="a">SAML is not optional for B2B.</span> Even greenfield SaaS that prefers OIDC ships SAML the moment a serious customer asks.</li>
+          <li><span class="a">SSO without SCIM is half a feature.</span> If you can't reliably de-provision, your enterprise contract has a security gap auditors will flag.</li>
+          <li><span class="a">Use a broker.</span> WorkOS, Auth0, or Keycloak as IdP-broker buy you years of "we already handle that quirk" — until in-sourcing has a real ROI.</li>
+        </ol>
+      </div>
+      <div class="card blue" style="margin-top:0.4em;">
+        <h3 class="b">Companion decks</h3>
+        <p><span class="a">OAuth Primer / Part 1 / Part 2</span> &middot; <span class="a">Introduction / Advanced OpenID Connect</span> &middot; <span class="a">Authentication Methods</span> &middot; <span class="a">Authorization Models</span>.</p>
+      </div>
+      <div class="card purple" style="margin-top:0.4em;">
+        <h3 class="p">References</h3>
+        <p>OASIS SAML 2.0 Core (March 2005) &middot; SAML 2.0 Bindings &middot; SAML 2.0 Profiles &middot; SAML 2.0 Errata &middot; OASIS SAML V2.0 Implementation Profile for Federation Interoperability &middot; RFC 7642 (SCIM Use Cases) &middot; RFC 7643 (SCIM Schema) &middot; RFC 7644 (SCIM Protocol) &middot; RFC 7517 (JWK) &middot; XML-DSig Best Practices &middot; OWASP SAML Security Cheat Sheet &middot; OpenID SSF / CAEP &middot; Auth0 / WorkOS / Stytch B2B SAML guides</p>
+      </div>
+      <div class="card red" style="margin-top:0.4em;">
+        <h3 class="r">One-line takeaway</h3>
+        <p>SAML is the enterprise tax; SCIM is the enterprise check. Pay both up-front and your B2B sales cycle gets shorter.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, slideNumber: 'c/t', transition: 'fade', transitionSpeed: 'fast',
+  controls: true, progress: true, center: false, width: 1100, height: 900, margin: 0.01,
+  plugins: [RevealHighlight], highlight: { theme: 'monokai' }
+});
+</script>
+<script>
+(function(){
+  var h = Reveal.getConfig().height || 900;
+  var m = Reveal.getConfig().margin || 0.02;
+  var maxH = Math.floor(h * (1 - 2 * m)) + 'px';
+  function fixSlides(){
+    document.querySelectorAll('.reveal .slides>section,.reveal .slides>section>section').forEach(function(s){
+      s.style.display = 'block'; s.style.maxHeight = maxH;
+    });
+  }
+  Reveal.on('ready', fixSlides);
+  Reveal.on('slidechanged', fixSlides);
+})();
+</script>
+</body>
+</html>
